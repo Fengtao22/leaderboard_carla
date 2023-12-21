@@ -167,14 +167,14 @@ class HumanAgent(AutonomousAgent):
         """
         Execute one step of navigation.
         """
-        self._clock.tick_busy_loop(20)
+        self._clock.tick_busy_loop(20)  ### 20Hz?
         self.agent_engaged = True
         self._hic.run_interface(input_data)
 
         control = self._controller.parse_events(timestamp - self._prev_timestamp)
         self._prev_timestamp = timestamp
 
-        print('human_agent run_step: ', timestamp)
+        #print('human_agent run_step: ', timestamp)
 
         return control
 

@@ -1,18 +1,10 @@
-The main goal of the CARLA Autonomous Driving Leaderboard is to evaluate the driving proficiency of autonomous agents in realistic traffic situations. The leaderboard serves as an open platform for the community to perform fair and reproducible evaluations, simplifying the comparison between different approaches.
+This repo is obtained from leaderboard-2.0 and we focus on carla version 0.9.14
 
-Autonomous agents have to drive through a set of predefined routes. For each route, agents are initialized at a starting point and have to drive to a destination point. The agents will be provided with a description of the route. Routes will happen in a variety of areas, including freeways, urban scenes, and residential districts.
+To run the data collection:
 
-Agents will face multiple traffic situations based in the NHTSA typology, such as:
-
-* Lane merging
-* Lane changing
-* Negotiations at traffic intersections
-* Negotiations at roundabouts
-* Handling traffic lights and traffic signs
-* Coping with pedestrians, cyclists and other elements
-
-The user can change the weather of the simulation, allowing the evaluation of the agent in a variety of weather conditions, including daylight scenes, sunset, rain, fog, and night, among others.
-
-More information can be found [here](https://leaderboard.carla.org/)
-
-This is obtained from leaderboard-2.0
+* First, start the carla simulator by: 
+/*sh CarlaUE4.sh -RenderOffScreen*/ here "RenderOffScreen" works for remote server  
+* run the test_run.sh file by:
+/*sh test_run.sh */ In this bash file, I select feng.py as the agent for ego car and the data saving process is conducted within feng.py
+## Things to do:
+1. modify feng.py in the autoagents folder

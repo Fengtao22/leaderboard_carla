@@ -12,6 +12,12 @@ from __future__ import print_function
 import carla
 
 from leaderboard.autoagents.autonomous_agent import AutonomousAgent, Track
+import pygame ### to display current window
+
+from leaderboard.autoagents.human_agent import HumanInterface 
+from srunner.scenariomanager.carla_data_provider import CarlaDataProvider
+import os.path
+import json 
 
 def get_entry_point():
     return 'feng'
@@ -26,7 +32,23 @@ class feng(AutonomousAgent):
         """
         Setup the agent parameters
         """
-        self.track = Track.MAP
+        self.track = Track.SENSORS #MAP
+
+        self.camera_width = 1280
+        self.camera_height = 720
+        self._side_scale = 0.3
+        self._left_mirror = False
+        self._right_mirror = False
+
+        self._hic = HumanInterface(
+            self.camera_width,
+            self.camera_height,
+            self._side_scale,
+            self._left_mirror,
+            self._right_mirror
+        )
+        self._prev_timestamp = 0
+        self._clock = pygame.time.Clock()
 
     def sensors(self):
         """
@@ -49,8 +71,7 @@ class feng(AutonomousAgent):
         sensors = [
             {'type': 'sensor.camera.rgb', 'x': 0.7, 'y': 0.0, 'z': 1.60, 'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0,
              'width': 800, 'height': 600, 'fov': 100, 'id': 'Center'},
-            {'type': 'sensor.opendrive_map', 'reading_frequency': 1, 'id': 'OpenDRIVE'}
-        ]
+        ]  ## {'type': 'sensor.opendrive_map', 'reading_frequency': 1, 'id': 'OpenDRIVE'}
 
         return sensors
 
@@ -58,6 +79,56 @@ class feng(AutonomousAgent):
         """
         Execute one step of navigation.
         """
+        self._clock.tick_busy_loop(20)  ### pygame frequency
+        self._hic.run_interface(input_data)  ## for visulizing purpose comme
+        ###########################################################################
+        ##### insert autopilot function here to get a smart control action ########
+        ###########################################################################
+        actor_list = CarlaDataProvider.get_world().get_actors().filter('vehicle.*') ### include cars and bikes
+        walker_list = CarlaDataProvider.get_world().get_actors().filter('walker.*') ### pedestrians 
+        print('vehicle number: ', len(actor_list))  ### parked cars are not included!!!! To do
+        print('walker number: ', len(walker_list))
+        print('type of the actor: ', type(actor_list[0]))
+
+
+        #### continuing writing to json file
+        current_timestamp = CarlaDataProvider.get_world().get_snapshot().timestamp
+        frame_ = current_timestamp.frame
+        lane_num = 4 ## To do
+        intent = 'unknown'
+
+        agent_dic = {}
+        for i, actor in enumerate(actor_list):
+            agent_id = actor.id
+            agent_type = actor.type_id #'kEgoVehicle'
+            x, y, z = actor.get_location().x, actor.get_location().y, actor.get_location().z
+            ax, ay, az = actor.get_acceleration().x, actor.get_acceleration().y, actor.get_acceleration().z
+            agent_dic[i] = {'agent_id': agent_id, 'agent_type_class': agent_type, 'agent_speed': (x, y, z), 'agent_acceleration': (ax,ay,az), 'agent_intent': intent}
+
+        for j, actor in enumerate(walker_list):
+            agent_id = actor.id
+            agent_type = actor.type_id #'kEgoVehicle'
+            x, y, z = actor.get_location().x, actor.get_location().y, actor.get_location().z
+            ax, ay, az = actor.get_acceleration().x, actor.get_acceleration().y, actor.get_acceleration().z
+            agent_dic[i+j] = {'agent_id': agent_id, 'agent_type_class': agent_type, 'agent_speed': (x, y, z), 'agent_acceleration': (ax,ay,az), 'agent_intent': intent}
+
+        frame_details ={ 
+            "info" : {'timestamp': timestamp, 'sequence_number': frame_}, 
+            "agents": agent_dic, 
+            "map": {'num_drivable_lanes': lane_num} 
+        } 
+            
+        # Convert and write JSON object to file
+        if os.path.isfile('sample.json'):
+            with open("sample.json", "a") as outfile: 
+                json.dump(frame_details, outfile)
+        else:    
+            with open("sample.json", "w") as outfile: 
+                json.dump(frame_details, outfile)
+
+
+        for actor in actor_list:
+            print(actor)
         print("=====================>")
         for key, val in input_data.items():
             if hasattr(val[1], 'shape'):
@@ -75,5 +146,7 @@ class feng(AutonomousAgent):
         control.throttle = 0.0
         control.brake = 0.0
         control.hand_brake = False
+        ###########################################################################
 
+        self._prev_timestamp = timestamp
         return control

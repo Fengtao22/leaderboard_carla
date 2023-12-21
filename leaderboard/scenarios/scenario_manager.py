@@ -165,11 +165,8 @@ class ScenarioManager(object):
             CarlaDataProvider.get_world().tick(self._timeout)
 
         timestamp = CarlaDataProvider.get_world().get_snapshot().timestamp
-        print('scenariomanager timestamp: ', timestamp)
-        actor_list = CarlaDataProvider.get_world().get_actors()
-        print(actor_list[0])
-        for actor in actor_list:
-            print(actor.get_velocity, actor.type_id)
+        print('scenariomanager timestamp.frame: ', timestamp.frame)
+
 
         if self._timestamp_last_run < timestamp.elapsed_seconds and self._running:
             self._timestamp_last_run = timestamp.elapsed_seconds
